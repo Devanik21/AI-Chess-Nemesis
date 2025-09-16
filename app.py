@@ -331,14 +331,14 @@ def main():
         st.session_state.board = chess.Board()
         st.session_state.move_history = []
         st.session_state.game_over = False
-        st.rerun()
+        #st.rerun()
     
     if col2.button("↩️ Undo Move") and len(st.session_state.move_history) >= 2:
         st.session_state.board.pop()  # Undo AI move
         st.session_state.board.pop()  # Undo player move
         st.session_state.move_history = st.session_state.move_history[:-2]
         st.session_state.game_over = False
-        st.rerun()
+       # st.rerun()
     
     # AI Settings
     st.sidebar.header("🤖 AI Settings")
@@ -409,7 +409,7 @@ def main():
                                 if st.session_state.board.is_game_over():
                                     st.session_state.game_over = True
                         
-                        st.rerun()
+                       # st.rerun()
                     else:
                         st.error("❌ Illegal move!")
                 except Exception as e:
