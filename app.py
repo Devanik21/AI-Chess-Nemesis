@@ -12,7 +12,7 @@ import os
 from io import BytesIO
 import base64
 from PIL import Image, ImageDraw
-import cairosvg
+
 
 # Neural Network for Position Evaluation
 class ChessNet(nn.Module):
@@ -269,28 +269,42 @@ class ChessAI:
         except:
             pass  # Use randomly initialized model
 
-def svg_to_png(svg_string, size=400):
-    """Convert SVG string to PNG using cairosvg"""
-    try:
-        png_bytes = cairosvg.svg2png(bytestring=svg_string.encode('utf-8'), output_width=size, output_height=size)
-        return Image.open(BytesIO(png_bytes))
-    except:
-        # Fallback: create a simple board representation
-        img = Image.new('RGB', (size, size), 'white')
-        draw = ImageDraw.Draw(img)
-        
-        # Draw checkerboard
-        square_size = size // 8
-        for row in range(8):
-            for col in range(8):
-                if (row + col) % 2 == 1:
-                    x1 = col * square_size
-                    y1 = row * square_size
-                    x2 = x1 + square_size
-                    y2 = y1 + square_size
-                    draw.rectangle([x1, y1, x2, y2], fill='gray')
-        
-        return img
+def create_board_image(board, size=400):
+    """Create a simple board representation using PIL"""
+    img = Image.new('RGB', (size, size), 'white')
+    draw = ImageDraw.Draw(img)
+    
+    square_size = size // 8
+    
+    # Unicode chess pieces
+    piece_symbols = {
+        'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔',
+        'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚'
+    }
+    
+    # Draw squares and pieces
+    for row in range(8):
+        for col in range(8):
+            square = chess.square(col, 7 - row)  # Flip vertically for display
+            
+            # Square color
+            is_dark = (row + col) % 2 == 1
+            color = '#D2691E' if is_dark else '#F5DEB3'  # Brown/beige
+            
+            x1, y1 = col * square_size, row * square_size
+            x2, y2 = x1 + square_size, y1 + square_size
+            draw.rectangle([x1, y1, x2, y2], fill=color)
+            
+            # Piece on square
+            piece = board.piece_at(square)
+            if piece:
+                symbol = piece_symbols.get(piece.symbol(), piece.symbol())
+                # Simple text drawing (limited font support)
+                text_x = x1 + square_size // 2 - 10
+                text_y = y1 + square_size // 2 - 10
+                draw.text((text_x, text_y), symbol, fill='black')
+    
+    return img
 
 # Streamlit App
 def main():
@@ -345,16 +359,8 @@ def main():
     with col1:
         st.subheader("🏁 Game Board")
         
-        # Generate board SVG
-        board_svg = chess.svg.board(
-            board=st.session_state.board,
-            size=400,
-            coordinates=True,
-            lastmove=st.session_state.move_history[-1] if st.session_state.move_history else None
-        )
-        
-        # Convert and display board
-        board_img = svg_to_png(board_svg)
+        # Generate board image directly
+        board_img = create_board_image(st.session_state.board)
         st.image(board_img, width=400)
         
         # Move input
