@@ -1,0 +1,6 @@
+streamlit 
+chess
+torch 
+pillow
+cairosvg 
+numpy
